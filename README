@@ -1,0 +1,188 @@
+# Totem Inteligente "Decida por Mim" – FlexMedia Challenge
+
+## 📌 Descrição do Projeto
+
+Este projeto foi desenvolvido como parte do **Challenge FlexMedia** do curso de **Machine Learning, IA Generativa e NLP da FIAP**.
+
+A proposta consiste no desenvolvimento de um **Totem Inteligente com Inteligência Artificial**, capaz de ajudar visitantes de shopping centers a tomar decisões rápidas sobre o que fazer no ambiente, além de coletar dados de interação para análise de comportamento e geração de insights.
+
+O sistema permite registrar interações dos usuários, analisar padrões de uso e aplicar **Machine Learning** para prever a probabilidade de aceitação das recomendações feitas pelo totem.
+
+---
+
+# 🎯 Problema
+
+Muitos visitantes entram em shoppings sem um objetivo definido, o que gera:
+
+* indecisão
+* baixa descoberta de novas lojas
+* menor conversão comercial
+
+Além disso, os administradores de shopping possuem pouca visibilidade sobre **a intenção real dos visitantes dentro do espaço**.
+
+---
+
+# 💡 Solução Proposta
+
+O **Totem Inteligente "Decida por Mim"** atua como um assistente digital para visitantes indecisos.
+
+O sistema faz perguntas rápidas como:
+
+* Comer
+* Comprar
+* Descansar
+
+A partir dessas respostas, o sistema sugere opções relevantes dentro do shopping.
+
+Durante essa interação, o sistema registra dados que podem ser utilizados para análise e melhoria das recomendações ao longo do tempo.
+
+---
+
+# ⚙️ Arquitetura do Sistema
+
+O sistema segue um pipeline de dados estruturado:
+
+Usuário → Totem → Sensor de interação → Script Python → Banco de dados → Análise de dados → Machine Learning → Dashboard
+
+O diagrama completo da arquitetura pode ser encontrado na pasta:
+
+```
+/diagrams/arquitetura.png
+```
+
+---
+
+# 🗄 Estrutura de Dados
+
+As interações dos usuários são registradas em um banco de dados SQLite na tabela:
+
+```
+interacoes
+```
+
+Campos principais:
+
+| Campo                | Descrição                                         |
+| -------------------- | ------------------------------------------------- |
+| id                   | identificador da interação                        |
+| timestamp            | momento da interação                              |
+| categoria            | intenção do usuário (comer, comprar ou descansar) |
+| preferencia          | preferência específica do usuário                 |
+| tempo_interacao      | tempo de uso do totem                             |
+| recomendacao         | loja sugerida                                     |
+| aceitou_recomendacao | indica se a recomendação foi aceita               |
+
+---
+
+# 📊 Análise de Dados
+
+Utilizando **Python e Pandas**, os dados são analisados para gerar métricas como:
+
+* número total de interações
+* categorias mais buscadas
+* taxa de aceitação das recomendações
+
+Essas métricas permitem entender o comportamento dos visitantes dentro do shopping.
+
+---
+
+# 🤖 Machine Learning
+
+Foi desenvolvido um modelo de **Machine Learning supervisionado** utilizando o algoritmo:
+
+**Random Forest Classifier**
+
+O objetivo do modelo é prever a probabilidade de um usuário aceitar uma recomendação feita pelo totem.
+
+O modelo utiliza variáveis como:
+
+* categoria escolhida
+* preferência do usuário
+* tempo de interação
+* recomendação sugerida
+
+O modelo foi treinado com os dados coletados pelo sistema e avaliado utilizando divisão de treino e teste.
+
+Resultado obtido:
+
+**Acurácia aproximada: 52%**
+
+---
+
+# 📊 Dashboard Interativo
+
+Foi desenvolvido um dashboard utilizando **Streamlit**, permitindo visualizar:
+
+* total de interações
+* taxa de aceitação
+* categorias mais escolhidas
+* gráficos de comportamento do usuário
+
+O dashboard permite que gestores do shopping acompanhem o desempenho do sistema e identifiquem padrões de comportamento dos visitantes.
+
+---
+
+# 🧰 Tecnologias Utilizadas
+
+Python
+SQLite
+Pandas
+Scikit-Learn
+Streamlit
+Matplotlib
+
+---
+
+# 📁 Estrutura do Projeto
+
+```
+flexmedia-totem-ia
+│
+├── sensors
+│   └── sensor_simulado.py
+│
+├── database
+│   └── create_database.py
+│
+├── data
+│   └── interacoes.db
+│
+├── analysis
+│   └── analise_dados.py
+│
+├── ml
+│   └── modelo_ml.py
+│
+├── dashboard
+│   └── app_streamlit.py
+│
+├── diagrams
+│   └── arquitetura.png
+│
+└── README.md
+```
+
+---
+
+# 📈 Impacto da Solução
+
+A solução permite que administradores de shopping obtenham insights estratégicos sobre:
+
+* intenções dos visitantes
+* categorias mais buscadas
+* eficiência das recomendações
+* padrões de comportamento ao longo do tempo
+
+Essas informações podem apoiar decisões de marketing, posicionamento de lojas e campanhas promocionais.
+
+---
+
+# 🎓 Contexto Acadêmico
+
+Projeto desenvolvido para o **Challenge FlexMedia – FIAP**, com foco na aplicação prática de conceitos de:
+
+* Machine Learning
+* Análise de Dados
+* Integração de Sistemas
+* Visualização de Dados
+* Arquitetura de Dados
