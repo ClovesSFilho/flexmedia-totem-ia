@@ -9,6 +9,7 @@ Executar com: streamlit run dashboard/app_streamlit.py
 
 import sqlite3
 import os
+import json
 import pandas as pd
 import numpy as np
 import streamlit as st
@@ -86,7 +87,20 @@ def carregar_dados() -> pd.DataFrame:
     return df
 
 
+@st.cache_data
+def carregar_metricas_ml() -> dict | None:
+    """Carrega métricas de ML do arquivo JSON gerado pelo modelo."""
+    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    metricas_path = os.path.join(base_dir, "ml", "metricas.json")
+
+    if os.path.exists(metricas_path):
+        with open(metricas_path, "r", encoding="utf-8") as f:
+            return json.load(f)
+    return None
+
+
 df_original = carregar_dados()
+metricas_ml = carregar_metricas_ml()
 
 
 # =============================================================================
@@ -421,51 +435,67 @@ with col_motivos:
 
 
 # =============================================================================
-# SEÇÃO ML – RESULTADOS DO MODELO
+# SEÇÃO ML – RESULTADOS DO MODELO (DINÂMICO VIA JSON)
 # =============================================================================
 
 st.markdown("---")
 st.header("🤖 Machine Learning – Resultados")
 
-col_ml1, col_ml2 = st.columns(2)
+if metricas_ml:
+    col_ml1, col_ml2 = st.columns(2)
 
-with col_ml1:
-    st.subheader("Métricas do Modelo")
-    st.markdown("""
-    | Métrica | Random Forest | Logistic Regression |
-    |---------|:---:|:---:|
-    | **Acurácia** | 0.688 | **0.694** |
-    | **Precisão** | **0.718** | 0.710 |
-    | **Recall** | 0.875 | **0.917** |
-    | **F1-Score** | 0.789 | **0.800** |
+    rf = metricas_ml["random_forest"]
+    lr = metricas_ml["logistic_regression"]
+    cv = metricas_ml["validacao_cruzada"]
+    modelo_sel = metricas_ml["modelo_selecionado"]
 
-    **Modelo selecionado:** Logistic Regression (melhor F1-Score)
+    with col_ml1:
+        st.subheader("Métricas dos Modelos")
 
-    **Validação Cruzada (5-fold):** Média = 0.811, Desvio = 0.023
-    → Modelo estável com baixa variância entre folds.
-    """)
+        # tabela comparativa
+        dados_tabela = {
+            "Métrica": ["Acurácia", "Precisão", "Recall", "F1-Score"],
+            "Random Forest": [rf["acuracia"], rf["precisao"], rf["recall"], rf["f1"]],
+            "Logistic Regression": [lr["acuracia"], lr["precisao"], lr["recall"], lr["f1"]],
+        }
+        df_metricas = pd.DataFrame(dados_tabela)
+        st.dataframe(df_metricas, hide_index=True, use_container_width=True)
 
-with col_ml2:
-    st.subheader("Importância das Features")
-    st.markdown("""
-    O **tempo de interação** é a variável mais importante para
-    prever se o usuário aceitará a recomendação (31% de importância).
+        st.markdown(f"**Modelo selecionado:** {modelo_sel} (melhor F1-Score)")
+        st.markdown(
+            f"**Validação Cruzada (5-fold):** Média F1 = {cv['media_f1']}, "
+            f"Desvio = {cv['desvio_f1']}"
+        )
+        st.markdown("→ Modelo estável com baixa variância entre folds.")
 
-    Ranking completo:
-    1. `tempo_interacao` → 31.1%
-    2. `loja_recomendada` → 17.9%
-    3. `preferencia` → 13.8%
-    4. `dia_semana` → 13.4%
-    5. `faixa_etaria` → 8.8%
-    6. `faixa_horaria` → 8.5%
-    7. `categoria` → 6.5%
-    """)
+    with col_ml2:
+        st.subheader("Importância das Features")
 
-    # carregar imagem do feature importance se existir
-    base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    fi_path = os.path.join(base_dir, "ml", "graficos", "01_feature_importance.png")
-    if os.path.exists(fi_path):
-        st.image(fi_path, use_container_width=True)
+        features = metricas_ml["feature_importance"]
+
+        st.markdown(
+            f"O **tempo de interação** é a variável mais importante para "
+            f"prever se o usuário aceitará a recomendação "
+            f"({features[0]['importancia'] * 100:.1f}% de importância)."
+        )
+
+        st.markdown("**Ranking completo:**")
+        for i, feat in enumerate(features, 1):
+            st.markdown(
+                f"{i}. `{feat['feature']}` → {feat['importancia'] * 100:.1f}%"
+            )
+
+        # carregar imagem do feature importance se existir
+        base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        fi_path = os.path.join(base_dir, "ml", "graficos", "01_feature_importance.png")
+        if os.path.exists(fi_path):
+            st.image(fi_path, width="stretch")
+
+else:
+    st.warning(
+        "Métricas de ML não encontradas. Execute `python ml/modelo_ml.py` "
+        "para gerar o arquivo `ml/metricas.json`."
+    )
 
 
 # =============================================================================
@@ -482,7 +512,7 @@ with st.expander("Visualizar dados brutos (clique para expandir)"):
     ]
     st.dataframe(
         df[colunas_exibir].sort_values("timestamp", ascending=False),
-        use_container_width=True,
+        width="stretch",
         height=400,
     )
 
