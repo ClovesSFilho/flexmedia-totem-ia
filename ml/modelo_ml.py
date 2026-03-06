@@ -12,10 +12,12 @@ Pipeline:
 6. Feature importance do melhor modelo
 7. Exporta matriz de confusão e gráficos
 8. Salva modelo treinado com joblib
+9. Exporta métricas em JSON para consumo pelo dashboard
 """
 
 import sqlite3
 import os
+import json
 import warnings
 import numpy as np
 import pandas as pd
@@ -209,7 +211,7 @@ def treinar_e_avaliar(X, y) -> tuple:
 # 3. VALIDAÇÃO CRUZADA
 # =============================================================================
 
-def validacao_cruzada(modelo, X, y, nome: str) -> None:
+def validacao_cruzada(modelo, X, y, nome: str) -> dict:
     """Executa validação cruzada 5-fold e exibe resultados."""
 
     print("\n" + "=" * 60)
@@ -232,12 +234,14 @@ def validacao_cruzada(modelo, X, y, nome: str) -> None:
     else:
         print("Modelo com VARIÂNCIA moderada entre folds")
 
+    return {"media": float(scores.mean()), "desvio": float(scores.std())}
+
 
 # =============================================================================
 # 4. FEATURE IMPORTANCE
 # =============================================================================
 
-def feature_importance(modelo_rf, feature_names: list) -> None:
+def feature_importance(modelo_rf, feature_names: list) -> list:
     """Exibe e plota a importância das features do Random Forest."""
 
     print("\n" + "=" * 60)
@@ -247,10 +251,15 @@ def feature_importance(modelo_rf, feature_names: list) -> None:
     importancias = modelo_rf.feature_importances_
     indices = np.argsort(importancias)[::-1]
 
+    ranking = []
     print(f"\n  Ranking de importância:")
     for i, idx in enumerate(indices, 1):
         barra = "█" * int(importancias[idx] * 80)
         print(f"    {i}. {feature_names[idx]:20s} → {importancias[idx]:.4f}  {barra}")
+        ranking.append({
+            "feature": feature_names[idx],
+            "importancia": round(float(importancias[idx]), 4)
+        })
 
     # gráfico
     os.makedirs(GRAFICOS_DIR, exist_ok=True)
@@ -277,6 +286,8 @@ def feature_importance(modelo_rf, feature_names: list) -> None:
     fig.savefig(caminho, bbox_inches="tight", facecolor="white")
     plt.close(fig)
     print(f"\n  Gráfico salvo: {caminho}")
+
+    return ranking
 
 
 # =============================================================================
@@ -394,6 +405,45 @@ def salvar_modelo(modelo, nome: str) -> None:
 
 
 # =============================================================================
+# 9. EXPORTAR MÉTRICAS EM JSON
+# =============================================================================
+
+def exportar_metricas(metricas_rf: dict, metricas_lr: dict,
+                      melhor_metricas: dict, cv_resultado: dict,
+                      ranking_features: list) -> None:
+    """
+    Exporta todas as métricas em um arquivo JSON para consumo
+    pelo dashboard Streamlit, eliminando valores hardcoded.
+    """
+    dados = {
+        "modelo_selecionado": melhor_metricas["nome"],
+        "random_forest": {
+            "acuracia": round(metricas_rf["acuracia"], 4),
+            "precisao": round(metricas_rf["precisao"], 4),
+            "recall": round(metricas_rf["recall"], 4),
+            "f1": round(metricas_rf["f1"], 4),
+        },
+        "logistic_regression": {
+            "acuracia": round(metricas_lr["acuracia"], 4),
+            "precisao": round(metricas_lr["precisao"], 4),
+            "recall": round(metricas_lr["recall"], 4),
+            "f1": round(metricas_lr["f1"], 4),
+        },
+        "validacao_cruzada": {
+            "media_f1": round(cv_resultado["media"], 4),
+            "desvio_f1": round(cv_resultado["desvio"], 4),
+        },
+        "feature_importance": ranking_features,
+    }
+
+    caminho = os.path.join(MODELO_DIR, "metricas.json")
+    with open(caminho, "w", encoding="utf-8") as f:
+        json.dump(dados, f, indent=2, ensure_ascii=False)
+
+    print(f"\n  Métricas exportadas em: {caminho}")
+
+
+# =============================================================================
 # EXECUÇÃO PRINCIPAL
 # =============================================================================
 
@@ -430,12 +480,12 @@ def main():
 
     # validação cruzada do melhor modelo
     if melhor_metricas["nome"] == "Random Forest":
-        validacao_cruzada(rf, X, y, "Random Forest")
+        cv_resultado = validacao_cruzada(rf, X, y, "Random Forest")
     else:
-        validacao_cruzada(lr, X, y, "Logistic Regression")
+        cv_resultado = validacao_cruzada(lr, X, y, "Logistic Regression")
 
     # feature importance (só para Random Forest)
-    feature_importance(rf, list(X.columns))
+    ranking_features = feature_importance(rf, list(X.columns))
 
     # gráfico comparativo
     print("\n" + "=" * 60)
@@ -448,6 +498,13 @@ def main():
     print("  SALVAMENTO DO MODELO")
     print("=" * 60)
     salvar_modelo(melhor_modelo, melhor_metricas["nome"])
+
+    # exportar métricas em JSON para o dashboard
+    print("\n" + "=" * 60)
+    print("  EXPORTAÇÃO DE MÉTRICAS")
+    print("=" * 60)
+    exportar_metricas(metricas_rf, metricas_lr, melhor_metricas,
+                      cv_resultado, ranking_features)
 
     # resumo final
     print("\n" + "=" * 60)
@@ -470,6 +527,7 @@ def main():
     print("=" * 60)
     print(f"  ML concluído. Gráficos em: {GRAFICOS_DIR}")
     print(f"  Modelo salvo em: {MODELO_DIR}/modelo_treinado.joblib")
+    print(f"  Métricas em: {MODELO_DIR}/metricas.json")
     print("=" * 60)
 
 

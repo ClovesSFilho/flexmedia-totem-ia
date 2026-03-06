@@ -32,6 +32,42 @@ O diagrama visual completo está disponível em `diagrams/arquitetura.png`.
 
 ---
 
+## Integração com Hardware (Totem Físico)
+
+O totem físico utiliza um microcontrolador **ESP32 ou ESP32-CAM** conectado a sensores de presença (PIR) e uma tela interativa (touch/display LCD).
+
+**Fluxo de funcionamento:**
+
+1. O sensor PIR detecta a presença de um visitante.
+2. O ESP32 inicia uma sessão no sistema.
+3. O evento é enviado via Wi-Fi para a aplicação Python (HTTP ou MQTT).
+4. A aplicação registra a sessão no banco de dados SQLite.
+5. O usuário interage com o totem escolhendo uma intenção e preferência.
+6. Os dados são armazenados e analisados pelo sistema de Machine Learning.
+7. O dashboard consolida métricas e insights de uso.
+
+Nesta versão acadêmica, os sensores são simulados pelo script `sensors/sensor_simulado.py`. A arquitetura foi projetada para que o módulo de simulação seja substituído por comunicação real com o ESP32 sem alterações nas demais camadas do sistema.
+
+---
+
+## Simulação de Sensores
+
+Para fins acadêmicos, o projeto utiliza o script `sensors/sensor_simulado.py` para gerar eventos de interação que representam dados que seriam coletados por sensores reais conectados ao ESP32.
+
+O simulador não gera dados puramente aleatórios — ele implementa **regras de correlação** que reproduzem comportamento humano real em um shopping center:
+
+- Faixa horária influencia categoria (almoço → "comer", noite → "lazer")
+- Faixa etária influencia preferências (jovens → lazer, idosos → descansar)
+- Categoria + preferência determinam lojas coerentes
+- **Tempo de interação é o principal preditor de aceitação** (>10s → ~75% aceita)
+- Volume varia por dia da semana (sábado = pico, quarta = vale)
+
+Isso permite demonstrar e validar todo o pipeline de dados (sensor → banco → análise → ML → dashboard) de ponta a ponta, sem necessidade de hardware físico.
+
+**Volume gerado:** ~470 sessões e ~720 interações distribuídas ao longo de 30 dias (seed fixa = 42 para reprodutibilidade).
+
+---
+
 ## Estrutura do Projeto
 
 ```
@@ -58,6 +94,7 @@ flexmedia-totem-ia/
 ├── ml/
 │   ├── modelo_ml.py                 # Random Forest + Logistic Regression
 │   ├── modelo_treinado.joblib       # Modelo salvo para reutilização
+│   ├── metricas.json                # Métricas exportadas para o dashboard
 │   └── graficos/
 │       ├── 01_feature_importance.png
 │       ├── 02_matriz_confusao.png
@@ -90,18 +127,6 @@ sessoes (1) ──→ (N) interacoes (1) ──→ (1) recomendacoes
 - **recomendacoes:** sugestão do totem (loja, aceitou, motivo de rejeição)
 
 Constraints aplicados: CHECK em 6 campos, FKs com CASCADE, 5 índices para performance.
-
----
-
-## Coleta de Dados
-
-O sensor simulado gera **~470 sessões e ~720 interações** distribuídas ao longo de 30 dias com regras de correlação realistas:
-
-- Faixa horária influencia categoria (almoço → "comer", noite → "lazer")
-- Faixa etária influencia preferências (jovens → lazer, idosos → descansar)
-- Categoria + preferência determinam lojas coerentes
-- **Tempo de interação é o principal preditor de aceitação** (>10s → ~75% aceita)
-- Volume varia por dia da semana (sábado = pico, quarta = vale)
 
 ---
 
@@ -163,7 +188,7 @@ Dashboard em **Streamlit** com layout wide e múltiplas visualizações:
 - Correlação tempo × aceitação
 - Ranking de lojas
 - Motivos de rejeição
-- Seção de resultados de ML
+- Seção de resultados de ML (métricas carregadas dinamicamente)
 - Tabela de dados brutos
 
 ---
@@ -229,10 +254,9 @@ Esses dados podem apoiar decisões de marketing, posicionamento de lojas e campa
 
 ## Segurança e Privacidade
 
+- Múltiplas camadas de validação (CHECK constraints, FK CASCADE, tipagem, PRAGMA foreign_keys)
 - Dados anonimizados sem vinculação a identidades pessoais
-- Constraints de validação em todos os campos críticos
-- Integridade referencial com chaves estrangeiras
-- Considerações de LGPD documentadas para cenário de produção
+- Considerações de LGPD documentadas para cenário de produção (consentimento, retenção, acesso mínimo)
 
 Detalhes completos na [documentação técnica](docs/documentacao_tecnica.md).
 
