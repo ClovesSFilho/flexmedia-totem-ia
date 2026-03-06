@@ -1,188 +1,261 @@
 # Totem Inteligente "Decida por Mim" – FlexMedia Challenge
 
-## 📌 Descrição do Projeto
+## Descrição do Projeto
 
-Este projeto foi desenvolvido como parte do **Challenge FlexMedia** do curso de **Machine Learning, IA Generativa e NLP da FIAP**.
+Projeto desenvolvido para o **Challenge FlexMedia – FIAP** no curso de **Machine Learning, IA Generativa e NLP**.
 
-A proposta consiste no desenvolvimento de um **Totem Inteligente com Inteligência Artificial**, capaz de ajudar visitantes de shopping centers a tomar decisões rápidas sobre o que fazer no ambiente, além de coletar dados de interação para análise de comportamento e geração de insights.
+O **Totem Inteligente "Decida por Mim"** é um sistema de recomendação interativo para shopping centers. Ele auxilia visitantes indecisos a decidir o que fazer — comer, comprar, descansar ou curtir uma opção de lazer — e sugere lojas relevantes com base em suas preferências.
 
-O sistema permite registrar interações dos usuários, analisar padrões de uso e aplicar **Machine Learning** para prever a probabilidade de aceitação das recomendações feitas pelo totem.
-
----
-
-# 🎯 Problema
-
-Muitos visitantes entram em shoppings sem um objetivo definido, o que gera:
-
-* indecisão
-* baixa descoberta de novas lojas
-* menor conversão comercial
-
-Além disso, os administradores de shopping possuem pouca visibilidade sobre **a intenção real dos visitantes dentro do espaço**.
+O sistema coleta dados de interação, armazena em banco relacional, realiza análise estatística completa e aplica **Machine Learning supervisionado** para prever a probabilidade de aceitação das recomendações, consolidando tudo em um **dashboard interativo em Streamlit**.
 
 ---
 
-# 💡 Solução Proposta
+## Problema
 
-O **Totem Inteligente "Decida por Mim"** atua como um assistente digital para visitantes indecisos.
-
-O sistema faz perguntas rápidas como:
-
-* Comer
-* Comprar
-* Descansar
-
-A partir dessas respostas, o sistema sugere opções relevantes dentro do shopping.
-
-Durante essa interação, o sistema registra dados que podem ser utilizados para análise e melhoria das recomendações ao longo do tempo.
+Muitos visitantes entram em shoppings sem um objetivo definido, gerando indecisão e baixa descoberta de novas lojas. Além disso, administradores de shopping possuem pouca visibilidade sobre a intenção real dos visitantes dentro do espaço, dificultando decisões de marketing e posicionamento.
 
 ---
 
-# ⚙️ Arquitetura do Sistema
+## Solução
 
-O sistema segue um pipeline de dados estruturado:
+O Totem Inteligente atua como um assistente digital. O visitante escolhe uma intenção (comer, comprar, descansar, lazer), informa uma preferência e recebe uma recomendação personalizada. Durante a interação, o sistema registra dados que alimentam análises de comportamento e modelos preditivos.
 
-Usuário → Totem → Sensor de interação → Script Python → Banco de dados → Análise de dados → Machine Learning → Dashboard
+---
 
-O diagrama completo da arquitetura pode ser encontrado na pasta:
+## Arquitetura do Sistema
 
 ```
-/diagrams/arquitetura.png
+Visitante → Totem (sensor) → Banco SQLite → Análise Estatística → Machine Learning → Dashboard
 ```
 
+O diagrama visual completo está disponível em `diagrams/arquitetura.png`.
+
 ---
 
-# 🗄 Estrutura de Dados
-
-As interações dos usuários são registradas em um banco de dados SQLite na tabela:
+## Estrutura do Projeto
 
 ```
-interacoes
-```
-
-Campos principais:
-
-| Campo                | Descrição                                         |
-| -------------------- | ------------------------------------------------- |
-| id                   | identificador da interação                        |
-| timestamp            | momento da interação                              |
-| categoria            | intenção do usuário (comer, comprar ou descansar) |
-| preferencia          | preferência específica do usuário                 |
-| tempo_interacao      | tempo de uso do totem                             |
-| recomendacao         | loja sugerida                                     |
-| aceitou_recomendacao | indica se a recomendação foi aceita               |
-
----
-
-# 📊 Análise de Dados
-
-Utilizando **Python e Pandas**, os dados são analisados para gerar métricas como:
-
-* número total de interações
-* categorias mais buscadas
-* taxa de aceitação das recomendações
-
-Essas métricas permitem entender o comportamento dos visitantes dentro do shopping.
-
----
-
-# 🤖 Machine Learning
-
-Foi desenvolvido um modelo de **Machine Learning supervisionado** utilizando o algoritmo:
-
-**Random Forest Classifier**
-
-O objetivo do modelo é prever a probabilidade de um usuário aceitar uma recomendação feita pelo totem.
-
-O modelo utiliza variáveis como:
-
-* categoria escolhida
-* preferência do usuário
-* tempo de interação
-* recomendação sugerida
-
-O modelo foi treinado com os dados coletados pelo sistema e avaliado utilizando divisão de treino e teste.
-
-Resultado obtido:
-
-**Acurácia aproximada: 52%**
-
----
-
-# 📊 Dashboard Interativo
-
-Foi desenvolvido um dashboard utilizando **Streamlit**, permitindo visualizar:
-
-* total de interações
-* taxa de aceitação
-* categorias mais escolhidas
-* gráficos de comportamento do usuário
-
-O dashboard permite que gestores do shopping acompanhem o desempenho do sistema e identifiquem padrões de comportamento dos visitantes.
-
----
-
-# 🧰 Tecnologias Utilizadas
-
-Python
-SQLite
-Pandas
-Scikit-Learn
-Streamlit
-Matplotlib
-
----
-
-# 📁 Estrutura do Projeto
-
-```
-flexmedia-totem-ia
+flexmedia-totem-ia/
 │
-├── sensors
-│   └── sensor_simulado.py
+├── database/
+│   └── create_database.py           # Criação do banco (3 tabelas, FKs, constraints)
 │
-├── database
-│   └── create_database.py
+├── sensors/
+│   └── sensor_simulado.py           # Gerador de dados com regras de correlação
 │
-├── data
-│   └── interacoes.db
+├── data/
+│   └── interacoes.db                # Banco SQLite (gerado automaticamente)
 │
-├── analysis
-│   └── analise_dados.py
+├── analysis/
+│   ├── analise_estatistica.py       # Análise completa com testes de hipótese
+│   └── graficos/                    # Gráficos exportados em PNG
+│       ├── 01_histograma_tempo.png
+│       ├── 02_aceitacao_segmentada.png
+│       ├── 03_correlacao_tempo_aceitacao.png
+│       ├── 04_analise_temporal.png
+│       └── 05_lojas_e_rejeicao.png
 │
-├── ml
-│   └── modelo_ml.py
+├── ml/
+│   ├── modelo_ml.py                 # Random Forest + Logistic Regression
+│   ├── modelo_treinado.joblib       # Modelo salvo para reutilização
+│   └── graficos/
+│       ├── 01_feature_importance.png
+│       ├── 02_matriz_confusao.png
+│       └── 03_comparacao_modelos.png
 │
-├── dashboard
-│   └── app_streamlit.py
+├── dashboard/
+│   └── app_streamlit.py             # Dashboard interativo com filtros
 │
-├── diagrams
-│   └── arquitetura.png
+├── docs/
+│   └── documentacao_tecnica.md      # Documentação técnica detalhada
+│
+├── diagrams/
+│   └── arquitetura.png              # Diagrama da arquitetura
 │
 └── README.md
 ```
 
 ---
 
-# 📈 Impacto da Solução
+## Modelagem de Dados
 
-A solução permite que administradores de shopping obtenham insights estratégicos sobre:
+O banco utiliza **3 tabelas normalizadas** com chaves estrangeiras e constraints:
 
-* intenções dos visitantes
-* categorias mais buscadas
-* eficiência das recomendações
-* padrões de comportamento ao longo do tempo
+```
+sessoes (1) ──→ (N) interacoes (1) ──→ (1) recomendacoes
+```
 
-Essas informações podem apoiar decisões de marketing, posicionamento de lojas e campanhas promocionais.
+- **sessoes:** visita do usuário (faixa etária, dia, horário)
+- **interacoes:** cada ação/escolha (categoria, preferência, tempo)
+- **recomendacoes:** sugestão do totem (loja, aceitou, motivo de rejeição)
+
+Constraints aplicados: CHECK em 6 campos, FKs com CASCADE, 5 índices para performance.
 
 ---
 
-# 🎓 Contexto Acadêmico
+## Coleta de Dados
 
-Projeto desenvolvido para o **Challenge FlexMedia – FIAP**, com foco na aplicação prática de conceitos de:
+O sensor simulado gera **~470 sessões e ~720 interações** distribuídas ao longo de 30 dias com regras de correlação realistas:
 
-* Machine Learning
-* Análise de Dados
-* Integração de Sistemas
-* Visualização de Dados
-* Arquitetura de Dados
+- Faixa horária influencia categoria (almoço → "comer", noite → "lazer")
+- Faixa etária influencia preferências (jovens → lazer, idosos → descansar)
+- Categoria + preferência determinam lojas coerentes
+- **Tempo de interação é o principal preditor de aceitação** (>10s → ~75% aceita)
+- Volume varia por dia da semana (sábado = pico, quarta = vale)
+
+---
+
+## Análise Estatística
+
+A análise inclui 7 seções com métricas, gráficos e testes:
+
+- **Estatísticas descritivas:** média, mediana, desvio padrão, quartis do tempo
+- **Taxas de aceitação segmentadas:** por categoria, faixa etária e horário
+- **Correlação ponto-biserial:** r = 0.297 (p < 0.001) entre tempo e aceitação
+- **Teste chi-quadrado:** χ² = 57.80, p = 2.90e-14 → rejeita H0, confirmando associação significativa entre tempo e aceitação
+- **Análise temporal:** heatmap dia × horário mostrando picos de movimento
+- **Performance de lojas:** ranking de conversão e motivos de rejeição
+- **5 gráficos PNG** exportados automaticamente
+
+---
+
+## Machine Learning
+
+### Modelos Treinados
+
+| Métrica | Random Forest | Logistic Regression |
+|---------|:---:|:---:|
+| Acurácia | 0.688 | **0.694** |
+| Precisão | **0.718** | 0.710 |
+| Recall | 0.875 | **0.917** |
+| F1-Score | 0.789 | **0.800** |
+
+### Modelo Selecionado
+
+**Logistic Regression** (F1 = 0.800) — escolhido pelo melhor equilíbrio entre precisão e recall. O recall alto (91.7%) é preferível no contexto de recomendações.
+
+### Validação Cruzada (5-fold)
+
+Média F1 = 0.811, desvio = 0.023 → modelo estável.
+
+### Feature Importance
+
+1. `tempo_interacao` — **31.1%** (principal preditor)
+2. `loja_recomendada` — 17.9%
+3. `preferencia` — 13.8%
+4. `dia_semana` — 13.4%
+5. `faixa_etaria` — 8.8%
+6. `faixa_horaria` — 8.5%
+7. `categoria` — 6.5%
+
+---
+
+## Dashboard Interativo
+
+Dashboard em **Streamlit** com layout wide e múltiplas visualizações:
+
+- Sidebar com filtros (categoria, faixa etária, horário, dia, período)
+- 5 KPIs em cards
+- Gráfico temporal de interações
+- Pizza de categorias
+- Aceitação segmentada (3 dimensões)
+- Heatmap dia × horário
+- Correlação tempo × aceitação
+- Ranking de lojas
+- Motivos de rejeição
+- Seção de resultados de ML
+- Tabela de dados brutos
+
+---
+
+## Como Executar
+
+### Pré-requisitos
+
+```bash
+pip install pandas numpy scikit-learn matplotlib seaborn scipy streamlit joblib
+```
+
+### Execução completa
+
+```bash
+# 1. Criar banco de dados
+python database/create_database.py
+
+# 2. Popular com dados simulados
+python sensors/sensor_simulado.py
+
+# 3. Rodar análise estatística
+python analysis/analise_estatistica.py
+
+# 4. Treinar modelos de ML
+python ml/modelo_ml.py
+
+# 5. Iniciar dashboard
+streamlit run dashboard/app_streamlit.py
+```
+
+Cada etapa depende da anterior. Execute na ordem indicada.
+
+---
+
+## Tecnologias Utilizadas
+
+| Tecnologia | Finalidade |
+|-----------|-----------|
+| Python | Linguagem principal |
+| SQLite | Banco de dados relacional |
+| Pandas / NumPy | Manipulação de dados |
+| Scikit-Learn | Modelos de Machine Learning |
+| Matplotlib / Seaborn | Visualização de dados |
+| SciPy | Testes estatísticos |
+| Streamlit | Dashboard interativo |
+| Joblib | Serialização de modelos |
+
+---
+
+## Resultados e Impacto
+
+A solução permite que administradores de shopping obtenham insights sobre:
+
+- **Intenções dos visitantes:** categorias mais buscadas por horário e perfil
+- **Eficiência das recomendações:** quais lojas convertem mais e quais motivos levam à rejeição
+- **Padrões temporais:** picos de movimento por dia da semana e faixa horária
+- **Previsão de comportamento:** modelo preditivo com F1 = 0.80 para antecipar aceitação
+
+Esses dados podem apoiar decisões de marketing, posicionamento de lojas e campanhas promocionais direcionadas.
+
+---
+
+## Segurança e Privacidade
+
+- Dados anonimizados sem vinculação a identidades pessoais
+- Constraints de validação em todos os campos críticos
+- Integridade referencial com chaves estrangeiras
+- Considerações de LGPD documentadas para cenário de produção
+
+Detalhes completos na [documentação técnica](docs/documentacao_tecnica.md).
+
+---
+
+## Vídeo de Demonstração
+
+Link do vídeo (YouTube não listado): *[inserir link aqui]*
+
+---
+
+## Contexto Acadêmico
+
+Projeto desenvolvido para o **Challenge FlexMedia – FIAP**, com foco na aplicação prática de:
+
+- Machine Learning supervisionado
+- Análise estatística e testes de hipótese
+- Modelagem de dados relacional
+- Integração de sistemas (sensor → banco → análise → visualização)
+- Visualização de dados e dashboards interativos
+
+---
+
+## Aluno Responsável
+
+| Cloves Silva Filho | RA567250 |
